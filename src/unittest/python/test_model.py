@@ -20,6 +20,11 @@ class TestField(unittest.TestCase):
         with self.assertRaises(ValueError):
             Field(name="x", label="X", type="choice")
 
+    def test_password_type_is_accepted(self):
+        a_field = Field(name="password", label="Password", type="password")
+
+        self.assertEqual(a_field.type, "password")
+
     def test_choice_with_choices_is_accepted(self):
         a_field = Field(name="x", label="X", type="choice", choices=("a", "b"))
 
