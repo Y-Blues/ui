@@ -1,12 +1,20 @@
 """
-Screen: a backend-agnostic, declarative description of a form-like screen (fields + actions).
+Screen: a backend-agnostic, declarative description of a form-like screen (fields + actions), built
+either directly in Python (see this module) or loaded from a YAML/JSON template
+(ycappuccino.ui.loader.load_screen) -- the template is the normal way to describe a screen; the
+Python model exists so a loaded template and a hand-built Screen are the exact same object, and so
+adapters never special-case "where the Screen came from".
 
-No adapter (Qt/textual/browser) is imported here, and none of Screen/Field/Action depends on any
-of them either: a Screen must be constructible and testable in plain CPython with none of the
-rendering toolkits installed. See ycappuccino-ui-shell (and future ui-qt/ui-web) for renderers.
+An Action never carries a hand-written Python callable: it names an Endpoint (service, method,
+path, static params) that a generic ycappuccino.ui.transport.Transport dispatches at runtime (see
+that module) -- the whole point of describing a screen in a template is that no per-screen Python
+code is needed to wire it up. No adapter (Qt/textual/browser) is imported here, and none of
+Screen/Field/Action/Endpoint depends on any of them either: a Screen must be constructible and
+testable in plain CPython with none of the rendering toolkits installed. See ycappuccino-ui-shell
+(and future ui-qt/ui-web) for renderers.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field as dataclass_field
 from typing import Any, Callable, Optional
 
 FIELD_TYPES = ("text", "number", "boolean", "choice", "date")
@@ -30,10 +38,22 @@ class Field:
 
 
 @dataclass(frozen=True)
+class Endpoint:
+    """what an Action calls: the same (service, method, path) shape IExposedService/RemoteCall
+    already use across the framework (ycappuccino.api.endpoints_service), so a template's endpoint
+    maps directly onto an existing route without inventing a second addressing scheme."""
+
+    service: str
+    method: str = "POST"
+    path: tuple[str, ...] = ()
+    params: dict = dataclass_field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class Action:
     name: str
     label: str
-    handler: Callable[[dict], Any]
+    endpoint: Endpoint
 
 
 @dataclass(frozen=True)

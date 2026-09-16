@@ -3,7 +3,9 @@ name = "ycappuccino-ui"
 version = "0.1.0"
 description = "YCappuccino ui: a backend-agnostic, declarative description of a form-like screen (fields + actions), rendered by separate adapters (Qt, shell, web)"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "pyyaml",
+]
 
 [build-system]
 requires = ["uv_build>=0.12.13,<0.13"]

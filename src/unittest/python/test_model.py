@@ -1,6 +1,6 @@
 import unittest
 
-from ycappuccino.ui.model import Action, Field, Screen
+from ycappuccino.ui.model import Action, Endpoint, Field, Screen
 
 
 class TestField(unittest.TestCase):
@@ -26,20 +26,28 @@ class TestField(unittest.TestCase):
         self.assertEqual(a_field.choices, ("a", "b"))
 
 
+class TestEndpoint(unittest.TestCase):
+
+    def test_defaults(self):
+        endpoint = Endpoint(service="login")
+
+        self.assertEqual(endpoint.method, "POST")
+        self.assertEqual(endpoint.path, ())
+        self.assertEqual(endpoint.params, {})
+
+
 class TestScreen(unittest.TestCase):
 
     def test_round_trip(self):
-        handled = []
         screen = Screen(
             title="Login",
             fields=(Field(name="username", label="Username", required=True),),
-            actions=(Action(name="submit", label="Log in", handler=handled.append),),
+            actions=(Action(name="submit", label="Log in", endpoint=Endpoint(service="login")),),
         )
 
         self.assertEqual(screen.title, "Login")
         self.assertEqual(len(screen.fields), 1)
-        screen.actions[0].handler({"username": "aurelien"})
-        self.assertEqual(handled, [{"username": "aurelien"}])
+        self.assertEqual(screen.actions[0].endpoint.service, "login")
 
     def test_defaults_are_empty(self):
         screen = Screen(title="Empty")
