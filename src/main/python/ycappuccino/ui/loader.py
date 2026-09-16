@@ -1,11 +1,5 @@
-"""
-load_screen: parse a Screen from a plain dict (as produced by yaml.safe_load/json.loads), or fetch
-one dynamically from a backend via a Transport -- inspired by SData 2.0's $template/$schema
-resource discovery (https://sage.github.io/SData-2.0/, entity/$template returns a default/empty
-instance of a resource, entity/$schema describes it): a service can describe its own screen instead
-of every client hand-authoring one. Only that idea is borrowed, not SData's own wire format -- the
-template vocabulary here stays plain (name/label/type/required), not SData's Atom/XML shape.
-"""
+"""Parses a Screen from a dict/YAML/JSON, or fetches one from a backend's "$template" operation
+(SData 2.0 inspired -- https://sage.github.io/SData-2.0/)."""
 
 import json
 
@@ -34,8 +28,6 @@ def load_screen_json(text: str) -> Screen:
 
 
 async def fetch_screen(transport: Transport, service: str) -> Screen:
-    """asks the service itself for its screen, at the reserved "$template" operation
-    (mirroring SData's entity/$template), instead of only ever loading one from a local file."""
     data = await transport.call(service, "GET", (TEMPLATE_OPERATION,), {}, None)
     return load_screen(data)
 

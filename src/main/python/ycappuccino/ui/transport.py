@@ -1,15 +1,5 @@
-"""
-Transport: the one thing every adapter must supply to make a Screen's Action callable -- how to
-actually reach an Endpoint. Same shape as ycappuccino.client.transport.HttpTransport /
-IHttpFetcher: a Protocol, so tests inject a fake and no adapter (shell/Qt/web) is forced to share
-an implementation -- a shell app in the same process as the backend might call an IServiceEndpoint
-directly, a browser adapter would go through ycappuccino-client's HttpTransport, a desktop Qt app
-might call plain HTTP.
-
-perform_action() is the "generic dispatch" every adapter reuses: build the call from the Screen's
-declared Endpoint plus the current field values, call the Transport, return its result. No adapter
-re-implements this -- it is the reason Action never carries a hand-written Python callable.
-"""
+"""Transport: how an adapter reaches an Endpoint. perform_action() is the generic dispatch every
+adapter reuses instead of a hand-written callable."""
 
 from typing import Any, Protocol
 

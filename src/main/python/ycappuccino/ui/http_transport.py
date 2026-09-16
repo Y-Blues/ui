@@ -1,14 +1,5 @@
-"""
-HttpTransport: a Transport that speaks the {"status", "meta", "data"} envelope over plain HTTP --
-the same protocol http_server/remote/client already speak. Reimplemented standalone here rather
-than imported from either: ycappuccino.ui has no dependency on ycappuccino.api/core (see README),
-the same choice ycappuccino-client's own HttpTransport already made and documented, for the same
-reason (client/README.md, "Traduction des erreurs").
-
-The actual urllib call runs in a worker thread (asyncio.to_thread): unlike remote/call.py's
-server-to-server case, this Transport backs an interactive screen -- blocking the event loop on
-network I/O would freeze the whole UI while a request is in flight.
-"""
+"""Transport speaking the {"status", "meta", "data"} envelope over plain HTTP. Standalone (no
+ycappuccino.api dependency, see README). Runs in a worker thread so it never blocks the UI."""
 
 import asyncio
 import json
