@@ -44,6 +44,13 @@ class TestValidateScreen(unittest.TestCase):
         self.assertEqual(errors, {})
         self.assertEqual(calls, [])
 
+    def test_empty_list_fails_required(self):
+        screen = Screen(title="s", fields=(Field(name="rights", label="Rights", type="list", required=True),))
+
+        errors = validate_screen(screen, {"rights": []})
+
+        self.assertIn("rights", errors)
+
     def test_default_value_satisfies_required_when_missing_from_values(self):
         screen = Screen(
             title="s",

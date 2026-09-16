@@ -25,6 +25,11 @@ class TestField(unittest.TestCase):
 
         self.assertEqual(a_field.type, "password")
 
+    def test_list_type_is_accepted(self):
+        a_field = Field(name="rights", label="Rights", type="list")
+
+        self.assertEqual(a_field.type, "list")
+
     def test_choice_with_choices_is_accepted(self):
         a_field = Field(name="x", label="X", type="choice", choices=("a", "b"))
 

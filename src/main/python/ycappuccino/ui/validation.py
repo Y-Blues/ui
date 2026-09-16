@@ -23,4 +23,4 @@ def validate_screen(screen: Screen, values: dict[str, Any]) -> dict[str, str]:
 
 
 def _is_empty(value: Any) -> bool:
-    return value is None or value == ""
+    return value is None or value == "" or value == []

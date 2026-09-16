@@ -17,7 +17,7 @@ testable in plain CPython with none of the rendering toolkits installed. See yca
 from dataclasses import dataclass, field as dataclass_field
 from typing import Any, Callable, Optional
 
-FIELD_TYPES = ("text", "password", "number", "boolean", "choice", "date")
+FIELD_TYPES = ("text", "password", "number", "boolean", "choice", "date", "list")
 
 
 @dataclass(frozen=True)
