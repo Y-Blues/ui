@@ -3,6 +3,7 @@ code (or the README to match it, whichever is wrong), the test is the source of 
 
 import unittest
 
+from ycappuccino.ui.http_transport import HttpTransport
 from ycappuccino.ui.loader import load_screen_yaml
 from ycappuccino.ui.model import Action, Endpoint, Field, Screen
 from ycappuccino.ui.transport import perform_action
@@ -70,6 +71,11 @@ class TestReadme(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(result["received"]["service"], "login")
         self.assertEqual(result["received"]["body"], {"username": "aurelien"})
+
+    def test_http_transport_constructs(self):
+        transport = HttpTransport("http://localhost:8080")
+
+        self.assertIsNone(transport.get_token())
 
 
 if __name__ == "__main__":

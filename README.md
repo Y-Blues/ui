@@ -115,6 +115,27 @@ async def main():
     return result
 ```
 
+## `HttpTransport` : parler à un vrai backend
+
+`Transport` prêt à l'emploi, pour un backend `http_server` réel — même enveloppe
+`{"status","meta","data"}`, même famille d'erreurs (`NotAuthenticated`/`Forbidden`/`NotFoundError`/
+`InvalidRequest`/`TransportError`) que `remote`/`client`, réimplémentée ici sans dépendre de l'un ou
+l'autre (voir plus haut, même raison que `ycappuccino-client`). Un jeton posé par `set_token(...)` (par
+exemple après un appel réussi vers `login`) est envoyé en `Authorization: Bearer <jeton>` sur tous les
+appels suivants :
+
+```python
+from ycappuccino.ui.http_transport import HttpTransport
+
+transport = HttpTransport("http://localhost:8080")
+# result = await transport.call("login", "POST", (), {}, {"login": "aurelien", "password": "x"})
+# transport.set_token(result["token"])
+```
+
+L'appel `urllib` réel tourne dans un thread (`asyncio.to_thread`) : contrairement à `remote/call.py`
+(serveur-à-serveur), ce `Transport` alimente un écran interactif — bloquer la boucle asyncio pendant
+l'appel réseau figerait toute l'interface.
+
 ## Développer ui
 
 ```bash
