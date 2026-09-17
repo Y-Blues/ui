@@ -6,7 +6,7 @@ import json
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 
 class TransportError(Exception):
@@ -31,7 +31,7 @@ class InvalidRequest(TransportError):
 
 class HttpTransport:
 
-    def __init__(self, base_url: str, opener=None, timeout: float = 5.0):
+    def __init__(self, base_url: str, opener: Callable | None = None, timeout: float = 5.0) -> None:
         self._base_url = base_url.rstrip("/")
         self._opener = opener if opener is not None else urllib.request.urlopen
         self._timeout = timeout
@@ -50,7 +50,9 @@ class HttpTransport:
         request = self._build_request(service, method, path, params, body)
         return await asyncio.to_thread(self._perform, request)
 
-    def _build_request(self, service, method, path, params, body):
+    def _build_request(
+        self, service: str, method: str, path: tuple, params: dict, body: Any
+    ) -> urllib.request.Request:
         url = f"{self._base_url}/api/services/{service}"
         if path:
             url += "/" + "/".join(path)
@@ -62,7 +64,7 @@ class HttpTransport:
             headers["Authorization"] = f"Bearer {self._token}"
         return urllib.request.Request(url, data=data, method=method, headers=headers)
 
-    def _perform(self, request):
+    def _perform(self, request: urllib.request.Request) -> Any:
         try:
             response = self._opener(request, timeout=self._timeout)
         except urllib.error.HTTPError as error:

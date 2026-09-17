@@ -18,7 +18,7 @@ class Field:
     choices: Optional[tuple[str, ...]] = None
     validate: Optional[Callable[[Any], Optional[str]]] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.type not in FIELD_TYPES:
             raise ValueError(f"field {self.name!r}: unknown type {self.type!r}, expected one of {FIELD_TYPES}")
         if self.type == "choice" and not self.choices:
