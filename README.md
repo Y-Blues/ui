@@ -3,11 +3,11 @@
 Une bibliothèque de description d'écran, pas un toolkit graphique : un `Screen` décrit un formulaire
 (champs + actions) une seule fois — normalement chargé depuis un template YAML/JSON, jamais construit à
 la main pour chaque écran — sans savoir s'il sera rendu en shell, en Qt ou dans un navigateur. Le rendu est
-le rôle des adapters séparés (`ycappuccino-ui-shell` pour le terminal, à venir : `ycappuccino-ui-qt`,
-`ycappuccino-ui-web` en HTML/CSS/pyscript). Une `Action` ne porte jamais de callable Python écrit à la
-main : elle nomme un `Endpoint` (service/méthode/chemin), appelé génériquement par
-`ycappuccino.ui.transport.perform_action` — la bibliothèque Python se limite au chargement du template et
-au câblage générique des événements, jamais à la logique d'un écran particulier.
+le rôle des adapters séparés (`ycappuccino-ui-shell` pour le terminal, [`ycappuccino-ui-web`](../ui_web/README.md)
+pour le navigateur via Pyodide/`client`, à venir : `ycappuccino-ui-qt`). Une `Action` ne porte jamais de
+callable Python écrit à la main : elle nomme un `Endpoint` (service/méthode/chemin), appelé génériquement
+par `ycappuccino.ui.transport.perform_action` — la bibliothèque Python se limite au chargement du template
+et au câblage générique des événements, jamais à la logique d'un écran particulier.
 
 Conception : [docs/superpowers/specs/2026-09-16-ui-screen-library-checkpoint.md](../remote/docs/superpowers/specs/2026-09-16-ui-screen-library-checkpoint.md)
 (brainstorming en cours, pas une spec figée — vit provisoirement dans `remote/docs/` faute d'un meilleur
