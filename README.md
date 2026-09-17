@@ -118,9 +118,9 @@ async def main():
     return result
 ```
 
-## Ponts `ICrud`/`IServiceEndpoint`
+## Ponts vers les interfaces backend
 
-`ycappuccino.ui.ycappuccino_transport` fournit les deux `Transport` qui relient un écran aux vraies
+`ycappuccino.ui.ycappuccino_transport` fournit les trois `Transport` qui relient un écran aux vraies
 interfaces backend, injectées dans le composant qui affiche l'écran :
 
 - `CrudTransport(crud: ICrud, subject=None)` : `service` est un `item_id` (`organization`, `role`...) ;
@@ -128,8 +128,12 @@ interfaces backend, injectées dans le composant qui affiche l'écran :
   `DELETE <id>` → `delete`.
 - `ServiceEndpointTransport(endpoint: IServiceEndpoint, subject=None)` : `service` est le nom d'un service
   exposé (`login`, `change_password`...), appelé tel quel.
+- `ComponentTransport(components: dict, subject=None)` : `service` nomme un des composants reçus, `method`
+  est la méthode à appeler, le corps ses arguments ; le sujet est passé à une méthode qui déclare un
+  paramètre `subject`. Un écran de connexion appelle ainsi `ILoginService.login` :
+  `ComponentTransport({"login": login_service})` avec `endpoint: {service: login, method: login}`.
 
-Ces ponts ne savent pas, et n'ont pas à savoir, si l'`ICrud`/`IServiceEndpoint` injecté est local ou un
+Ces ponts ne savent pas, et n'ont pas à savoir, si l'interface injectée est local ou un
 proxy vers un autre framework (`ycappuccino-client` dans un navigateur) : ce choix appartient au
 déploiement, jamais à `ui`. Aucune classe de `ui` ne parle HTTP.
 

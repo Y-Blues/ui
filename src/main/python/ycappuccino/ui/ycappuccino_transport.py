@@ -1,6 +1,7 @@
 """
 Bridges the real backend interfaces (ycappuccino.api.endpoints_storage.ICrud,
-ycappuccino.api.endpoints_service.IServiceEndpoint) to ycappuccino.ui.transport.Transport, so a
+ycappuccino.api.endpoints_service.IServiceEndpoint, or any interface through ComponentTransport) to
+ycappuccino.ui.transport.Transport, so a
 Screen's Endpoint(service, method, path, params) works uniformly whether it addresses a named
 service or a CRUD item -- the YAML never says which, only the deployment's Transport choice does.
 
@@ -18,6 +19,7 @@ the SHAPE of the call (Transport.call(...) vs ICrud's distinct methods / IServic
 never the question of where the implementation lives or how it talks to it.
 """
 
+import inspect
 from typing import Any
 
 from ycappuccino.api.endpoints_service import IServiceEndpoint
@@ -57,3 +59,22 @@ class ServiceEndpointTransport:
     async def call(self, service: str, method: str, path: tuple, params: dict, body: Any) -> Any:
         result = await self._endpoint.call(service, method, list(path), params, body, self.subject)
         return result.body
+
+
+class ComponentTransport:
+    """Transport calling a component through its interface: `service` names one of the components
+    (e.g. {"login": an ILoginService}), `method` is the method to call, the body its arguments."""
+
+    def __init__(self, components: dict[str, Any], subject: dict | None = None) -> None:
+        self._components = components
+        self.subject = subject
+
+    async def call(self, service: str, method: str, path: tuple, params: dict, body: Any) -> Any:
+        component = self._components.get(service)
+        target = None if component is None or method.startswith("_") else getattr(component, method, None)
+        if not callable(target):
+            raise ValueError(f"ComponentTransport: no method {method!r} on component {service!r}")
+        kwargs = dict(body or {})
+        if "subject" in inspect.signature(target).parameters:
+            kwargs["subject"] = self.subject
+        return await target(**kwargs)

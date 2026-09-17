@@ -1,6 +1,6 @@
 import unittest
 
-from ycappuccino.ui.ycappuccino_transport import CrudTransport, ServiceEndpointTransport
+from ycappuccino.ui.ycappuccino_transport import ComponentTransport, CrudTransport, ServiceEndpointTransport
 
 
 class FakeCrud:
@@ -137,6 +137,44 @@ class TestServiceEndpointTransport(unittest.IsolatedAsyncioTestCase):
         await transport.call("scripts", "POST", ("run",), {}, {})
 
         self.assertEqual(endpoint.calls[0][2], ["run"])
+
+
+
+class FakeLogin:
+
+    def __init__(self):
+        self.calls = []
+
+    async def login(self, login, password):
+        self.calls.append((login, password))
+        return "token"
+
+    async def whoami(self, subject=None):
+        return subject
+
+
+class TestComponentTransport(unittest.IsolatedAsyncioTestCase):
+
+    async def test_calls_the_named_method_of_the_named_component_with_the_body_as_arguments(self):
+        login = FakeLogin()
+        transport = ComponentTransport({"login": login})
+
+        result = await transport.call("login", "login", (), {}, {"login": "alice", "password": "secret"})
+
+        self.assertEqual((result, login.calls), ("token", [("alice", "secret")]))
+
+    async def test_the_subject_is_passed_to_a_method_declaring_one(self):
+        transport = ComponentTransport({"me": FakeLogin()}, subject={"sub": "alice"})
+
+        self.assertEqual(await transport.call("me", "whoami", (), {}, None), {"sub": "alice"})
+
+    async def test_an_unknown_component_or_a_private_method_is_refused(self):
+        transport = ComponentTransport({"login": FakeLogin()})
+
+        for service, method in (("nobody", "login"), ("login", "_private"), ("login", "missing")):
+            with self.subTest(service=service, method=method):
+                with self.assertRaises(ValueError):
+                    await transport.call(service, method, (), {}, {})
 
 
 if __name__ == "__main__":
