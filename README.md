@@ -13,13 +13,17 @@ Conception : [docs/superpowers/specs/2026-09-16-ui-screen-library-checkpoint.md]
 (brainstorming en cours, pas une spec figée — vit provisoirement dans `remote/docs/` faute d'un meilleur
 endroit).
 
-Aucune dépendance à `ycappuccino.api`/`ycappuccino.core` : `Screen`/`Field`/`Action`/`Endpoint` sont de
-simples `dataclasses`, testables sans aucun toolkit de rendu installé et sans le reste du framework — un
-choix délibéré, plus léger que de réutiliser le mécanisme `@Item`/`@Property` de
-`ycappuccino.api.decorators` (pensé pour des modèles persistés via `IManager`, ce qu'un écran n'est pas).
-`Endpoint(service, method, path, params)` reprend volontairement la même forme d'adressage que
-`IExposedService.call(method, extra_path, params, body, subject)` (`ycappuccino.api.endpoints_service`,
-déjà utilisée par `remote`) plutôt que d'en inventer une seconde.
+Le cœur (`model.py`/`transport.py`/`validation.py`/`loader.py`) ne dépend d'aucun toolkit de rendu ni du
+reste du framework : `Screen`/`Field`/`Action`/`Endpoint` sont de simples `dataclasses`, testables sans
+`ycappuccino.api`/`ycappuccino.core` installés — un choix délibéré, plus léger que de réutiliser le
+mécanisme `@Item`/`@Property` de `ycappuccino.api.decorators` (pensé pour des modèles persistés via
+`IManager`, ce qu'un écran n'est pas). `Endpoint(service, method, path, params)` reprend volontairement la
+même forme d'adressage que `IExposedService.call(method, extra_path, params, body, subject)`
+(`ycappuccino.api.endpoints_service`, déjà utilisée par `remote`) plutôt que d'en inventer une seconde.
+
+Seul `ycappuccino_transport.py` (voir plus bas, "Ponts `ICrud`/`IServiceEndpoint`") dépend de
+`ycappuccino.api` — un module séparé, optionnel : un adapter qui n'en a pas besoin ne paie rien pour que
+`ycappuccino.api` soit installable.
 
 ## Décrire un écran en YAML
 
@@ -95,9 +99,8 @@ errors = validate_screen(screen, {"username": ""})
 
 `perform_action(action, values, transport)` est le dispatch générique que tout adapter réutilise : il
 construit le corps de la requête (`Endpoint.params` puis les valeurs de champs par-dessus) et appelle
-`transport.call(service, method, path, params, body)`. `Transport` est un `Protocol` — chaque déploiement
-fournit le sien (HTTP direct, `ycappuccino-client`'s `HttpTransport` dans un navigateur, un
-`IServiceEndpoint` local si l'adapter tourne dans le même process que le backend) :
+`transport.call(service, method, path, params, body)`. `Transport` est un `Protocol` ; en pratique on
+utilise l'un des deux ponts ci-dessous plutôt que d'en écrire un :
 
 ```python
 import asyncio
@@ -115,26 +118,27 @@ async def main():
     return result
 ```
 
-## `HttpTransport` : parler à un vrai backend
+## Ponts `ICrud`/`IServiceEndpoint`
 
-`Transport` prêt à l'emploi, pour un backend `http_server` réel — même enveloppe
-`{"status","meta","data"}`, même famille d'erreurs (`NotAuthenticated`/`Forbidden`/`NotFoundError`/
-`InvalidRequest`/`TransportError`) que `remote`/`client`, réimplémentée ici sans dépendre de l'un ou
-l'autre (voir plus haut, même raison que `ycappuccino-client`). Un jeton posé par `set_token(...)` (par
-exemple après un appel réussi vers `login`) est envoyé en `Authorization: Bearer <jeton>` sur tous les
-appels suivants :
+`ycappuccino.ui.ycappuccino_transport` fournit les deux `Transport` qui relient un écran aux vraies
+interfaces backend, injectées dans le composant qui affiche l'écran :
+
+- `CrudTransport(crud: ICrud, subject=None)` : `service` est un `item_id` (`organization`, `role`...) ;
+  `GET` sans chemin → `get_many`, `GET <id>` → `get_one`, `POST` → `create`, `PUT <id>` → `update`,
+  `DELETE <id>` → `delete`.
+- `ServiceEndpointTransport(endpoint: IServiceEndpoint, subject=None)` : `service` est le nom d'un service
+  exposé (`login`, `change_password`...), appelé tel quel.
+
+Ces ponts ne savent pas, et n'ont pas à savoir, si l'`ICrud`/`IServiceEndpoint` injecté est local ou un
+proxy vers un autre framework (`ycappuccino-client` dans un navigateur) : ce choix appartient au
+déploiement, jamais à `ui`. Aucune classe de `ui` ne parle HTTP.
 
 ```python
-from ycappuccino.ui.http_transport import HttpTransport
+from ycappuccino.ui.ycappuccino_transport import CrudTransport
 
-transport = HttpTransport("http://localhost:8080")
-# result = await transport.call("login", "POST", (), {}, {"login": "aurelien", "password": "x"})
-# transport.set_token(result["token"])
+# dans un composant : def __init__(self, crud: ICrud) -> None: ...
+# transport = CrudTransport(self._crud, subject=subject)
 ```
-
-L'appel `urllib` réel tourne dans un thread (`asyncio.to_thread`) : contrairement à `remote/call.py`
-(serveur-à-serveur), ce `Transport` alimente un écran interactif — bloquer la boucle asyncio pendant
-l'appel réseau figerait toute l'interface.
 
 ## Développer ui
 

@@ -5,6 +5,7 @@ description = "YCappuccino ui: a backend-agnostic, declarative description of a 
 requires-python = ">=3.10"
 dependencies = [
     "pyyaml",
+    "ycappuccino-api",
 ]
 
 [build-system]
@@ -14,3 +15,6 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-name = "ycappuccino.ui"
 module-root = "src/main/python"
+
+[tool.uv.sources]
+ycappuccino-api = { path = "../api", editable = true }
