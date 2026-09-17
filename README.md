@@ -144,6 +144,30 @@ from ycappuccino.ui.ycappuccino_transport import CrudTransport
 # transport = CrudTransport(self._crud, subject=subject)
 ```
 
+## Une console entière : `Application`
+
+`ycappuccino.ui.application` décrit le layout d'une console une seule fois : écran de connexion, menu, et
+pour chaque entrée les écrans enchaînés. `ui_shell` et `ui_web` le rendent de la même façon.
+
+```yaml
+title: Administration
+login: {screen: login, transport: login}
+menu:
+  - label: Créer un utilisateur
+    steps:
+      - {screen: create_login, transport: services}
+      - {screen: account, transport: crud, prefill: {login: values.login}}
+      - {screen: role_account, transport: crud, prefill: {account: result._id}}
+```
+
+- `screen` et `transport` sont des noms que l'application résout : une fonction qui charge un `Screen` par
+  son nom, et un dictionnaire de `Transport`.
+- `prefill` remplit les champs d'une étape depuis la précédente : `values.<champ>` (ce qui y a été saisi) ou
+  `result.<clé>` (ce que son action a renvoyé). `prefill_values(step, values, result)` fait ce calcul, et
+  `with_defaults(screen, champ=valeur)` rend l'écran pré-rempli.
+- Après la dernière étape, l'adapter affiche `saved` (défaut « Enregistré. ») avec un bouton `back`
+  (« Retour au menu ») ; le menu se termine par `sign_out` (« Se déconnecter »).
+
 ## Développer ui
 
 ```bash
