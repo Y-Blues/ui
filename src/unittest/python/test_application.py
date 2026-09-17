@@ -16,14 +16,14 @@ APPLICATION_YAML = """
 title: Administration
 login: {screen: login, transport: login, user: login}
 menu:
-  - label: Rôles
+  - label: Roles
     entries:
-      - label: Créer un rôle
+      - label: Create a role
         steps:
           - {screen: role, transport: crud}
-  - label: Utilisateurs
+  - label: Users
     entries:
-      - label: Créer un utilisateur
+      - label: Create a user
         steps:
           - {screen: create_login, transport: services}
           - {screen: account, transport: crud, prefill: {login: values.login}}
@@ -44,14 +44,14 @@ class TestLoadApplication(unittest.TestCase):
                 user_field="login",
                 menu=(
                     MenuGroup(
-                        label="Rôles",
-                        entries=(MenuEntry(label="Créer un rôle", steps=(Step(screen="role", transport="crud"),)),),
+                        label="Roles",
+                        entries=(MenuEntry(label="Create a role", steps=(Step(screen="role", transport="crud"),)),),
                     ),
                     MenuGroup(
-                        label="Utilisateurs",
+                        label="Users",
                         entries=(
                             MenuEntry(
-                                label="Créer un utilisateur",
+                                label="Create a user",
                                 steps=(
                                     Step(screen="create_login", transport="services"),
                                     Step(screen="account", transport="crud", prefill={"login": "values.login"}),
@@ -70,13 +70,13 @@ class TestLoadApplication(unittest.TestCase):
 
         self.assertEqual(
             (application.sign_out, application.saved, application.welcome, application.user_field),
-            ("Se déconnecter", "OK", "Bienvenue {user}.", None),
+            ("Sign out", "OK", "Welcome, {user}.", None),
         )
 
     def test_the_welcome_names_the_signed_in_user(self):
         application = load_application({"title": "t", "login": {"screen": "l", "transport": "l"}, "menu": []})
 
-        self.assertEqual(application.welcome_text("admin"), "Bienvenue admin.")
+        self.assertEqual(application.welcome_text("admin"), "Welcome, admin.")
 
     def test_a_prefill_reads_the_values_or_the_result_of_the_previous_step_only(self):
         with self.assertRaises(ValueError):

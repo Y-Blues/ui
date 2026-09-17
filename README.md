@@ -28,14 +28,14 @@ Seul `ycappuccino_transport.py` (voir plus bas, "Ponts `ICrud`/`IServiceEndpoint
 ## Décrire un écran en YAML
 
 ```yaml
-title: Connexion
+title: Sign in
 fields:
   - name: username
-    label: Nom d'utilisateur
+    label: Username
     required: true
 actions:
   - name: submit
-    label: Se connecter
+    label: Sign in
     endpoint:
       service: login
       method: POST
@@ -69,12 +69,12 @@ Atom/XML.
 from ycappuccino.ui.model import Action, Endpoint, Field, Screen
 
 screen = Screen(
-    title="Connexion",
+    title="Sign in",
     fields=(
-        Field(name="username", label="Nom d'utilisateur", required=True),
+        Field(name="username", label="Username", required=True),
         Field(name="remember_me", label="Se souvenir de moi", type="boolean", default=False),
     ),
-    actions=(Action(name="submit", label="Se connecter", endpoint=Endpoint(service="login")),),
+    actions=(Action(name="submit", label="Sign in", endpoint=Endpoint(service="login")),),
 )
 ```
 
@@ -89,7 +89,7 @@ logique pour tous les adapters, jamais réimplémentée par renderer :
 from ycappuccino.ui.validation import validate_screen
 
 errors = validate_screen(screen, {"username": ""})
-# {"username": "Nom d'utilisateur is required"}
+# {"username": "Username is required"}
 ```
 
 `Field.validate` n'est appelé que si le champ n'est pas vide (`required` couvre déjà le cas vide) —
@@ -153,9 +153,9 @@ menu, et pour chaque entrée les écrans enchaînés. `ui_shell` et `ui_web` le 
 title: Administration
 login: {screen: login, transport: login, user: login}
 menu:
-  - label: Utilisateurs
+  - label: Users
     entries:
-      - label: Créer un utilisateur
+      - label: Create a user
         steps:
           - {screen: create_login, transport: services}
           - {screen: account, transport: crud, prefill: {login: values.login}}
@@ -170,8 +170,8 @@ menu:
   `result.<clé>` (ce que son action a renvoyé). `prefill_values(step, values, result)` fait ce calcul, et
   `with_defaults(screen, champ=valeur)` rend l'écran pré-rempli.
 - Une fois connecté, l'adapter garde une barre de navigation : le titre, un menu déroulant par section,
-  l'utilisateur et `sign_out` (« Se déconnecter »). Dessous : `welcome` (« Bienvenue {user}. »), puis les
-  écrans d'une entrée, puis `saved` (« Enregistré. »).
+  l'utilisateur et `sign_out` (« Sign out »). Dessous : `welcome` (« Welcome, {user}. »), puis les
+  écrans d'une entrée, puis `saved` (« Saved. »).
 
 ## Développer ui
 

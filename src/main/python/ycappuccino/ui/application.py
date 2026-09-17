@@ -5,9 +5,9 @@ chains -- described once (usually YAML) and rendered the same way by every adapt
     title: Administration
     login: {screen: login, transport: login, user: login}
     menu:
-      - label: Utilisateurs
+      - label: Users
         entries:
-          - label: Créer un utilisateur
+          - label: Create a user
             steps:
               - {screen: create_login, transport: services}
               - {screen: account, transport: crud, prefill: {login: values.login}}
@@ -58,9 +58,9 @@ class Application:
     login: Step
     menu: tuple[MenuGroup, ...]
     user_field: str | None = None
-    sign_out: str = "Se déconnecter"
-    saved: str = "Enregistré."
-    welcome: str = "Bienvenue {user}."
+    sign_out: str = "Sign out"
+    saved: str = "Saved."
+    welcome: str = "Welcome, {user}."
 
     def welcome_text(self, user: str | None) -> str:
         return self.welcome.format(user=user or "")

@@ -10,14 +10,14 @@ from ycappuccino.ui.validation import validate_screen
 from ycappuccino.ui.ycappuccino_transport import CrudTransport
 
 SCREEN_YAML = """
-title: Connexion
+title: Sign in
 fields:
   - name: username
-    label: Nom d'utilisateur
+    label: Username
     required: true
 actions:
   - name: submit
-    label: Se connecter
+    label: Sign in
     endpoint:
       service: login
       method: POST
@@ -29,34 +29,34 @@ class TestReadme(unittest.IsolatedAsyncioTestCase):
     def test_load_screen_yaml(self):
         screen = load_screen_yaml(SCREEN_YAML)
 
-        self.assertEqual(screen.title, "Connexion")
+        self.assertEqual(screen.title, "Sign in")
         self.assertEqual(screen.fields[0].name, "username")
         self.assertEqual(screen.actions[0].endpoint.service, "login")
 
     def test_describe_a_screen_directly_in_python(self):
         screen = Screen(
-            title="Connexion",
+            title="Sign in",
             fields=(
-                Field(name="username", label="Nom d'utilisateur", required=True),
+                Field(name="username", label="Username", required=True),
                 Field(name="remember_me", label="Se souvenir de moi", type="boolean", default=False),
             ),
-            actions=(Action(name="submit", label="Se connecter", endpoint=Endpoint(service="login")),),
+            actions=(Action(name="submit", label="Sign in", endpoint=Endpoint(service="login")),),
         )
 
-        self.assertEqual(screen.title, "Connexion")
+        self.assertEqual(screen.title, "Sign in")
 
     def test_validate(self):
-        screen = Screen(title="s", fields=(Field(name="username", label="Nom d'utilisateur", required=True),))
+        screen = Screen(title="s", fields=(Field(name="username", label="Username", required=True),))
 
         errors = validate_screen(screen, {"username": ""})
 
-        self.assertEqual(errors, {"username": "Nom d'utilisateur is required"})
+        self.assertEqual(errors, {"username": "Username is required"})
 
     async def test_perform_action(self):
         screen = Screen(
-            title="Connexion",
-            fields=(Field(name="username", label="Nom d'utilisateur", required=True),),
-            actions=(Action(name="submit", label="Se connecter", endpoint=Endpoint(service="login")),),
+            title="Sign in",
+            fields=(Field(name="username", label="Username", required=True),),
+            actions=(Action(name="submit", label="Sign in", endpoint=Endpoint(service="login")),),
         )
 
         class ExampleTransport:

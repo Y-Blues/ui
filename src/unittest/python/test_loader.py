@@ -3,15 +3,15 @@ import unittest
 from ycappuccino.ui.loader import fetch_screen, load_screen, load_screen_json, load_screen_yaml
 
 SCREEN_DICT = {
-    "title": "Connexion",
+    "title": "Sign in",
     "fields": [
-        {"name": "username", "label": "Nom d'utilisateur", "required": True},
+        {"name": "username", "label": "Username", "required": True},
         {"name": "role", "label": "Role", "type": "choice", "choices": ["admin", "user"]},
     ],
     "actions": [
         {
             "name": "submit",
-            "label": "Se connecter",
+            "label": "Sign in",
             "endpoint": {"service": "login", "method": "POST"},
         },
     ],
@@ -23,7 +23,7 @@ class TestLoadScreen(unittest.TestCase):
     def test_loads_fields_and_actions_from_a_dict(self):
         screen = load_screen(SCREEN_DICT)
 
-        self.assertEqual(screen.title, "Connexion")
+        self.assertEqual(screen.title, "Sign in")
         self.assertEqual(len(screen.fields), 2)
         self.assertEqual(screen.fields[0].name, "username")
         self.assertTrue(screen.fields[0].required)
@@ -38,21 +38,21 @@ class TestLoadScreen(unittest.TestCase):
 
     def test_loads_from_yaml_text(self):
         text = """
-        title: Connexion
+        title: Sign in
         fields:
           - name: username
-            label: Nom d'utilisateur
+            label: Username
             required: true
         actions:
           - name: submit
-            label: Se connecter
+            label: Sign in
             endpoint:
               service: login
         """
 
         screen = load_screen_yaml(text)
 
-        self.assertEqual(screen.title, "Connexion")
+        self.assertEqual(screen.title, "Sign in")
         self.assertEqual(screen.fields[0].name, "username")
 
     def test_loads_from_json_text(self):
@@ -60,7 +60,7 @@ class TestLoadScreen(unittest.TestCase):
 
         screen = load_screen_json(json.dumps(SCREEN_DICT))
 
-        self.assertEqual(screen.title, "Connexion")
+        self.assertEqual(screen.title, "Sign in")
         self.assertEqual(len(screen.actions), 1)
 
 
@@ -82,7 +82,7 @@ class TestFetchScreen(unittest.IsolatedAsyncioTestCase):
 
         screen = await fetch_screen(transport, "login")
 
-        self.assertEqual(screen.title, "Connexion")
+        self.assertEqual(screen.title, "Sign in")
         self.assertEqual(transport.calls, [("login", "GET", ("$template",), {}, None)])
 
 
