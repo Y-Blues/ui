@@ -1,20 +1,25 @@
 """
-Application: the layout of a whole console -- its login screen, its menu, and the screens each menu entry
+Application: the layout of a whole console -- its login screen, its menu sections, and the screens each entry
 chains -- described once (usually YAML) and rendered the same way by every adapter (ui_shell, ui_web).
 
     title: Administration
-    login: {screen: login, transport: login}
+    login: {screen: login, transport: login, user: login}
     menu:
-      - label: Créer un utilisateur
-        steps:
-          - {screen: create_login, transport: services}
-          - {screen: account, transport: crud, prefill: {login: values.login}}
-          - {screen: role_account, transport: crud, prefill: {account: result._id}}
+      - label: Utilisateurs
+        entries:
+          - label: Créer un utilisateur
+            steps:
+              - {screen: create_login, transport: services}
+              - {screen: account, transport: crud, prefill: {login: values.login}}
+              - {screen: role_account, transport: crud, prefill: {account: result._id}}
 
-`screen` and `transport` are names the application resolves (a screen loader, a dict of Transports). A
-step's `prefill` fills its fields from the previous step: `values.<field>` what was typed there,
-`result.<key>` what its action returned. Once the last step succeeds, the adapter shows `saved` with a
-`back` button to the menu; the menu ends with `sign_out`.
+`screen` and `transport` are names the application resolves (a screen loader, a dict of Transports). The
+login's `user` names the field of the login screen whose value is shown as the signed-in user. A step's
+`prefill` fills its fields from the previous step: `values.<field>` what was typed there, `result.<key>` what
+its action returned.
+
+Once signed in, an adapter keeps a navigation bar on screen -- the title, one dropdown per menu section, the
+user and `sign_out` -- above the content: first `welcome`, then an entry's screens, then `saved`.
 """
 
 import dataclasses
@@ -42,25 +47,42 @@ class MenuEntry:
 
 
 @dataclass(frozen=True)
+class MenuGroup:
+    label: str
+    entries: tuple[MenuEntry, ...]
+
+
+@dataclass(frozen=True)
 class Application:
     title: str
     login: Step
-    menu: tuple[MenuEntry, ...]
+    menu: tuple[MenuGroup, ...]
+    user_field: str | None = None
     sign_out: str = "Se déconnecter"
     saved: str = "Enregistré."
-    back: str = "Retour au menu"
+    welcome: str = "Bienvenue {user}."
+
+    def welcome_text(self, user: str | None) -> str:
+        return self.welcome.format(user=user or "")
 
 
 def load_application(data: dict) -> Application:
-    labels = {key: data[key] for key in ("sign_out", "saved", "back") if key in data}
+    texts = {key: data[key] for key in ("sign_out", "saved", "welcome") if key in data}
     return Application(
         title=data["title"],
         login=_load_step(data["login"]),
+        user_field=data["login"].get("user"),
         menu=tuple(
-            MenuEntry(label=entry["label"], steps=tuple(_load_step(step) for step in entry["steps"]))
-            for entry in data.get("menu", ())
+            MenuGroup(
+                label=group["label"],
+                entries=tuple(
+                    MenuEntry(label=entry["label"], steps=tuple(_load_step(step) for step in entry["steps"]))
+                    for entry in group["entries"]
+                ),
+            )
+            for group in data.get("menu", ())
         ),
-        **labels,
+        **texts,
     )
 
 

@@ -3,6 +3,7 @@ import unittest
 from ycappuccino.ui.application import (
     Application,
     MenuEntry,
+    MenuGroup,
     Step,
     load_application,
     load_application_yaml,
@@ -13,22 +14,26 @@ from ycappuccino.ui.model import Field, Screen
 
 APPLICATION_YAML = """
 title: Administration
-login: {screen: login, transport: login}
+login: {screen: login, transport: login, user: login}
 menu:
-  - label: Créer un rôle
-    steps:
-      - {screen: role, transport: crud}
-  - label: Créer un utilisateur
-    steps:
-      - {screen: create_login, transport: services}
-      - {screen: account, transport: crud, prefill: {login: values.login}}
-      - {screen: role_account, transport: crud, prefill: {account: result._id}}
+  - label: Rôles
+    entries:
+      - label: Créer un rôle
+        steps:
+          - {screen: role, transport: crud}
+  - label: Utilisateurs
+    entries:
+      - label: Créer un utilisateur
+        steps:
+          - {screen: create_login, transport: services}
+          - {screen: account, transport: crud, prefill: {login: values.login}}
+          - {screen: role_account, transport: crud, prefill: {account: result._id}}
 """
 
 
 class TestLoadApplication(unittest.TestCase):
 
-    def test_loads_the_login_the_menu_and_the_steps(self):
+    def test_loads_the_login_and_the_menu_sections_with_their_entries(self):
         application = load_application_yaml(APPLICATION_YAML)
 
         self.assertEqual(
@@ -36,32 +41,48 @@ class TestLoadApplication(unittest.TestCase):
             Application(
                 title="Administration",
                 login=Step(screen="login", transport="login"),
+                user_field="login",
                 menu=(
-                    MenuEntry(label="Créer un rôle", steps=(Step(screen="role", transport="crud"),)),
-                    MenuEntry(
-                        label="Créer un utilisateur",
-                        steps=(
-                            Step(screen="create_login", transport="services"),
-                            Step(screen="account", transport="crud", prefill={"login": "values.login"}),
-                            Step(screen="role_account", transport="crud", prefill={"account": "result._id"}),
+                    MenuGroup(
+                        label="Rôles",
+                        entries=(MenuEntry(label="Créer un rôle", steps=(Step(screen="role", transport="crud"),)),),
+                    ),
+                    MenuGroup(
+                        label="Utilisateurs",
+                        entries=(
+                            MenuEntry(
+                                label="Créer un utilisateur",
+                                steps=(
+                                    Step(screen="create_login", transport="services"),
+                                    Step(screen="account", transport="crud", prefill={"login": "values.login"}),
+                                    Step(screen="role_account", transport="crud", prefill={"account": "result._id"}),
+                                ),
+                            ),
                         ),
                     ),
                 ),
             ),
         )
 
-    def test_the_labels_have_defaults_and_can_be_overridden(self):
+    def test_the_texts_have_defaults_and_can_be_overridden(self):
         application = load_application({"title": "t", "login": {"screen": "l", "transport": "l"}, "menu": [],
-                                         "back": "Menu"})
+                                         "saved": "OK"})
 
-        self.assertEqual((application.sign_out, application.saved, application.back),
-                         ("Se déconnecter", "Enregistré.", "Menu"))
+        self.assertEqual(
+            (application.sign_out, application.saved, application.welcome, application.user_field),
+            ("Se déconnecter", "OK", "Bienvenue {user}.", None),
+        )
+
+    def test_the_welcome_names_the_signed_in_user(self):
+        application = load_application({"title": "t", "login": {"screen": "l", "transport": "l"}, "menu": []})
+
+        self.assertEqual(application.welcome_text("admin"), "Bienvenue admin.")
 
     def test_a_prefill_reads_the_values_or_the_result_of_the_previous_step_only(self):
         with self.assertRaises(ValueError):
             load_application({"title": "t", "login": {"screen": "l", "transport": "l"},
-                               "menu": [{"label": "x", "steps": [{"screen": "s", "transport": "t",
-                                                                   "prefill": {"a": "session.user"}}]}]})
+                              "menu": [{"label": "g", "entries": [{"label": "x", "steps": [
+                                  {"screen": "s", "transport": "t", "prefill": {"a": "session.user"}}]}]}]})
 
 
 class TestPrefill(unittest.TestCase):

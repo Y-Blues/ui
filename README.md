@@ -146,27 +146,32 @@ from ycappuccino.ui.ycappuccino_transport import CrudTransport
 
 ## Une console entière : `Application`
 
-`ycappuccino.ui.application` décrit le layout d'une console une seule fois : écran de connexion, menu, et
-pour chaque entrée les écrans enchaînés. `ui_shell` et `ui_web` le rendent de la même façon.
+`ycappuccino.ui.application` décrit le layout d'une console une seule fois : écran de connexion, sections du
+menu, et pour chaque entrée les écrans enchaînés. `ui_shell` et `ui_web` le rendent de la même façon.
 
 ```yaml
 title: Administration
-login: {screen: login, transport: login}
+login: {screen: login, transport: login, user: login}
 menu:
-  - label: Créer un utilisateur
-    steps:
-      - {screen: create_login, transport: services}
-      - {screen: account, transport: crud, prefill: {login: values.login}}
-      - {screen: role_account, transport: crud, prefill: {account: result._id}}
+  - label: Utilisateurs
+    entries:
+      - label: Créer un utilisateur
+        steps:
+          - {screen: create_login, transport: services}
+          - {screen: account, transport: crud, prefill: {login: values.login}}
+          - {screen: role_account, transport: crud, prefill: {account: result._id}}
 ```
 
 - `screen` et `transport` sont des noms que l'application résout : une fonction qui charge un `Screen` par
   son nom, et un dictionnaire de `Transport`.
+- `user` (connexion) nomme le champ de l'écran de connexion dont la valeur est affichée comme utilisateur
+  connecté.
 - `prefill` remplit les champs d'une étape depuis la précédente : `values.<champ>` (ce qui y a été saisi) ou
   `result.<clé>` (ce que son action a renvoyé). `prefill_values(step, values, result)` fait ce calcul, et
   `with_defaults(screen, champ=valeur)` rend l'écran pré-rempli.
-- Après la dernière étape, l'adapter affiche `saved` (défaut « Enregistré. ») avec un bouton `back`
-  (« Retour au menu ») ; le menu se termine par `sign_out` (« Se déconnecter »).
+- Une fois connecté, l'adapter garde une barre de navigation : le titre, un menu déroulant par section,
+  l'utilisateur et `sign_out` (« Se déconnecter »). Dessous : `welcome` (« Bienvenue {user}. »), puis les
+  écrans d'une entrée, puis `saved` (« Enregistré. »).
 
 ## Développer ui
 
